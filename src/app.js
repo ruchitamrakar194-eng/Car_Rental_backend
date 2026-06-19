@@ -9,8 +9,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
-// ADD THIS FOR RAILWAY
-app.set('trust proxy', 1);
+
 // Global Middlewares
 const allowedOrigins = [
   'http://localhost:5173',
