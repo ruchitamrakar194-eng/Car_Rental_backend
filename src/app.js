@@ -10,6 +10,11 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
+// Railway / Nginx / Reverse Proxy Fix
+app.set('trust proxy', 1);
+
+// Global Middlewares
+
 // Global Middlewares
 const allowedOrigins = [
   'http://localhost:5173',
