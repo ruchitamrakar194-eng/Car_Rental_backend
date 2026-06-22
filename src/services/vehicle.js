@@ -106,6 +106,9 @@ const getVehicles = async (queryFilters) => {
 
   if (status) {
     where.status = mapStatusToDB(status);
+  } else {
+    // By default, exclude Sold vehicles from the rental catalog listing
+    where.NOT = { status: 'Sold' };
   }
 
   if (category) {

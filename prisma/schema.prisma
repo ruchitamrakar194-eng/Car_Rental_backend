@@ -209,6 +209,7 @@ enum VehicleStatus {
   In_Trip
   Maintenance
   Out_Of_Service
+  Sold
 }
 
 model Vehicle {
@@ -241,6 +242,11 @@ model Vehicle {
   security_deposit   Decimal              @db.Decimal(10, 2) @default(2500.00)
   minimum_rental_days Int                 @default(2)
 
+  // Sale Listing
+  is_for_sale        Boolean              @default(false)
+  sale_price         Decimal?             @db.Decimal(10, 2)
+  sale_description   String?              @db.Text
+
   // Service & Maintenance / Compliance Expiries
   insurance_expiry   DateTime?
   registration_expiry DateTime?
@@ -255,6 +261,7 @@ model Vehicle {
   contracts          Contract[]
   deliveries         Delivery[]
   returns            VehicleReturn[]
+  sale_inquiries     VehicleSaleInquiry[]
 
   @@index([status])
   @@index([category])
@@ -878,3 +885,47 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// ============================================================
+// CAR SALES MODULE
+// ============================================================
+
+enum SaleInquiryStatus {
+  New
+  Contacted
+  Test_Drive_Scheduled
+  Negotiating
+  Won
+  Lost
+}
+
+enum ReservationFeeStatus {
+  Unpaid
+  Paid
+  Refunded
+}
+
+model VehicleSaleInquiry {
+  id                     String               @id @default(uuid())
+  inquiry_number         String               @unique @db.VarChar(50)
+  vehicle_id             String
+  full_name              String               @db.VarChar(255)
+  email                  String               @db.VarChar(255)
+  phone                  String               @db.VarChar(30)
+  message                String?              @db.Text
+  status                 SaleInquiryStatus    @default(New)
+  reservation_fee_status ReservationFeeStatus @default(Unpaid)
+  reservation_fee_amount Decimal              @db.Decimal(10, 2) @default(500.00)
+  transaction_reference  String?              @db.VarChar(255)
+  admin_notes            String?              @db.Text
+  is_deleted             Boolean              @default(false)
+  created_at             DateTime             @default(now())
+  updated_at             DateTime             @updatedAt
+
+  vehicle                Vehicle              @relation(fields: [vehicle_id], references: [id])
+
+  @@index([vehicle_id])
+  @@index([status])
+  @@index([email])
+  @@index([inquiry_number])
+  @@map("vehicle_sale_inquiries")
+}

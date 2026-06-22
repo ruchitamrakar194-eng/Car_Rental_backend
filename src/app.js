@@ -10,16 +10,11 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-// Railway / Nginx / Reverse Proxy Fix
-app.set('trust proxy', 1);
-
-// Global Middlewares
-
 // Global Middlewares
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://gofintaza-carrentals.netlify.app',
+  'http://localhost:3001',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -63,6 +58,7 @@ const dashboardRouter = require('./routes/dashboard');
 const customerRouter = require('./routes/customer');
 const uploadRouter = require('./routes/upload');
 const imagekitRouter = require('./routes/imagekit');
+const salesRouter = require('./routes/sales');
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -91,6 +87,7 @@ app.use('/dashboard', dashboardRouter);
 app.use('/customers', customerRouter);
 app.use('/upload', uploadRouter);
 app.use('/imagekit', imagekitRouter);
+app.use('/sales', salesRouter);
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
