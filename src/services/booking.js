@@ -1,4 +1,5 @@
 const prisma = require('../config/db');
+const stripe = require('../config/stripe');
 const { BadRequestError, ForbiddenError, NotFoundError } = require('../utils/errors');
 const auditService = require('./audit');
 const notificationService = require('./notification');
@@ -657,12 +658,119 @@ const createPublicBooking = async (bookingBody) => {
     newBooking.contract_signed = true;
   }
 
+  // Handle Stripe Credit Card integration
+  if (paymentMethod === 'CREDIT_DEBIT_CARD') {
+    const originalStatus = newBooking.status;
+    
+    // Override status to Payment_Pending
+    await prisma.booking.update({
+      where: { id: newBooking.id },
+      data: {
+        status: 'Payment_Pending'
+      }
+    });
+
+    await prisma.bookingStatusHistory.create({
+      data: {
+        booking_id: newBooking.id,
+        old_status: originalStatus,
+        new_status: 'Payment_Pending',
+        changed_by: adminUser.id,
+        notes: 'Stripe Credit Card payment initialized. Booking moved to Payment Pending.',
+      }
+    });
+
+    newBooking.status = 'Payment_Pending';
+
+    // Create Stripe PaymentIntent
+    const amountInCents = Math.round(Number(totalAmount) * 100);
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInCents,
+      currency: 'usd',
+      metadata: {
+        booking_id: newBooking.id,
+        booking_number: newBooking.booking_number,
+        customer_id: customer.id,
+        customer_name: customer.full_name,
+        customer_email: customer.email,
+      },
+    });
+
+    // Create Payment record in DB
+    const year = new Date().getFullYear();
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const paymentNumber = `PAY-${year}-${randomSuffix}`;
+
+    const dbPayment = await prisma.payment.create({
+      data: {
+        payment_number: paymentNumber,
+        booking_id: newBooking.id,
+        customer_id: customer.id,
+        payment_method: 'CREDIT_DEBIT_CARD',
+        amount: totalAmount,
+        paid_amount: 0.00,
+        remaining_amount: totalAmount,
+        status: 'Pending',
+        transaction_reference: paymentIntent.id,
+        notes: 'Stripe PaymentIntent initialized.',
+      },
+    });
+
+    await prisma.paymentHistory.create({
+      data: {
+        payment_id: dbPayment.id,
+        old_status: 'Pending',
+        new_status: 'Pending',
+        changed_by: adminUser.id,
+        notes: 'Payment record initialized for Stripe Checkout.',
+      },
+    });
+
+    // Attach Stripe data to returned object
+    newBooking.clientSecret = paymentIntent.client_secret;
+    newBooking.paymentIntentId = paymentIntent.id;
+  }
+
   return newBooking;
+};
+
+const cancelPublicBooking = async (id) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+  });
+
+  if (!booking) {
+    throw new NotFoundError('Booking not found.');
+  }
+
+  // Only allow cancelling if it's Payment_Pending (unpaid public attempt)
+  if (booking.status !== 'Payment_Pending') {
+    throw new BadRequestError('Only pending payment bookings can be cancelled.');
+  }
+
+  await prisma.$transaction([
+    // 1. Soft delete the booking
+    prisma.booking.update({
+      where: { id },
+      data: { is_deleted: true },
+    }),
+    // 2. Set vehicle status back to Available
+    prisma.vehicle.update({
+      where: { id: booking.vehicle_id },
+      data: { status: 'Available' },
+    }),
+    // 3. Mark payment as Cancelled if exists
+    prisma.payment.updateMany({
+      where: { booking_id: id },
+      data: { status: 'Cancelled' },
+    }),
+  ]);
 };
 
 module.exports = {
   createBooking,
   createPublicBooking,
+  cancelPublicBooking,
   getBookings,
   getBookingById,
   updateBooking,

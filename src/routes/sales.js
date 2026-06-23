@@ -29,12 +29,12 @@ router.get('/inquiries/:id', authenticate, authorize('ADMIN', 'OPERATIONS_MANAGE
 router.patch('/inquiries/:id', authenticate, authorize('ADMIN', 'OPERATIONS_MANAGER'), salesController.updateInquiry);
 
 // POST /sales/vehicles/:vehicleId/list    – Mark a vehicle for sale
-router.post('/vehicles/:vehicleId/list', authenticate, authorize('ADMIN'), salesController.listVehicleForSale);
+router.post('/vehicles/:vehicleId/list', authenticate, authorize('ADMIN', 'OPERATIONS_MANAGER'), salesController.listVehicleForSale);
 
 // DELETE /sales/vehicles/:vehicleId/list – Remove vehicle from sale
-router.delete('/vehicles/:vehicleId/list', authenticate, authorize('ADMIN'), salesController.delistVehicleFromSale);
+router.delete('/vehicles/:vehicleId/list', authenticate, authorize('ADMIN', 'OPERATIONS_MANAGER'), salesController.delistVehicleFromSale);
 
 // POST /sales/vehicles/:vehicleId/sold   – Mark vehicle as SOLD
-router.post('/vehicles/:vehicleId/sold', authenticate, authorize('ADMIN'), salesController.markVehicleAsSold);
+router.post('/vehicles/:vehicleId/sold', authenticate, authorize('ADMIN', 'OPERATIONS_MANAGER'), salesController.markVehicleAsSold);
 
 module.exports = router;

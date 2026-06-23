@@ -5,6 +5,9 @@ const { authenticate, authorize } = require('../middlewares/auth');
 
 const router = express.Router();
 
+// Public configuration route (unauthenticated)
+router.get('/public', settingController.getPublicSettings);
+
 router.use(authenticate);
 
 router.get('/', authorize('ADMIN', 'OPERATIONS_MANAGER'), settingController.list);

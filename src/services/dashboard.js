@@ -17,6 +17,7 @@ const getAdminDashboard = async (currentUserRole) => {
     deliveries,
     returns,
     customers,
+    saleInquiries,
   ] = await Promise.all([
     prisma.payment.findMany(),
     prisma.vehicle.findMany({ where: { is_deleted: false } }),
@@ -25,6 +26,7 @@ const getAdminDashboard = async (currentUserRole) => {
     prisma.delivery.findMany(),
     prisma.vehicleReturn.findMany({ include: { inspections: true } }),
     prisma.customer.findMany(),
+    prisma.vehicleSaleInquiry.findMany({ where: { is_deleted: false } }),
   ]);
 
   // Financial aggregates
@@ -53,6 +55,13 @@ const getAdminDashboard = async (currentUserRole) => {
   const pendingReturns = returns.filter(r => r.status !== 'Completed' && r.status !== 'Cancelled').length;
   const totalCustomers = customers.length;
 
+  // Sales stats
+  const salesListedCount = vehicles.filter(v => v.is_for_sale && v.status !== 'Sold').length;
+  const salesSoldCount = vehicles.filter(v => v.status === 'Sold').length;
+  const salesRevenue = vehicles.filter(v => v.status === 'Sold').reduce((sum, v) => sum + Number(v.sale_price || 0), 0);
+  const salesInquiriesCount = saleInquiries.length;
+  const newSalesInquiriesCount = saleInquiries.filter(si => si.status === 'New').length;
+
   // Trends & Widgets
   const monthlyRevenueTrend = [];
   const monthlyBookingsTrend = [];
@@ -66,9 +75,19 @@ const getAdminDashboard = async (currentUserRole) => {
       const pDate = new Date(p.created_at);
       return pDate.getMonth() === d.getMonth() && pDate.getFullYear() === d.getFullYear();
     });
+
+    // Sales Revenue in the month
+    const mSales = vehicles.filter(v => {
+      if (v.status !== 'Sold') return false;
+      const vDate = new Date(v.updated_at);
+      return vDate.getMonth() === d.getMonth() && vDate.getFullYear() === d.getFullYear();
+    });
+    const monthlySalesRevenue = mSales.reduce((sum, v) => sum + Number(v.sale_price || 0), 0);
+
     monthlyRevenueTrend.push({
       label: monthLabel,
       revenue: mPay.reduce((sum, p) => sum + Number(p.paid_amount), 0),
+      salesRevenue: monthlySalesRevenue,
     });
 
     // Bookings
@@ -114,6 +133,11 @@ const getAdminDashboard = async (currentUserRole) => {
     pendingDeliveries,
     pendingReturns,
     totalCustomers,
+    salesListedCount,
+    salesSoldCount,
+    salesRevenue,
+    salesInquiriesCount,
+    newSalesInquiriesCount,
     widgets: {
       revenueTrend: monthlyRevenueTrend,
       monthlyBookingsTrend,

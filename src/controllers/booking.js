@@ -85,9 +85,19 @@ const createPublicBooking = async (req, res, next) => {
   }
 };
 
+const cancelPublicBooking = async (req, res, next) => {
+  try {
+    await bookingService.cancelPublicBooking(req.params.id);
+    return success(res, 'Booking cancelled and vehicle released successfully.');
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   create,
   createPublicBooking,
+  cancelPublicBooking,
   list,
   getById,
   update,

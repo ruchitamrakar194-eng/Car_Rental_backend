@@ -28,8 +28,18 @@ const update = async (req, res, next) => {
   }
 };
 
+const getPublicSettings = async (req, res, next) => {
+  try {
+    const publicSettings = await settingService.getPublicSettings();
+    return success(res, 'Public settings retrieved successfully.', publicSettings);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   list,
   getByKey,
   update,
+  getPublicSettings,
 };

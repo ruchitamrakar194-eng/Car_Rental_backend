@@ -15,7 +15,6 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://gofintaza-carrentals.netlify.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -50,6 +49,7 @@ const driverRouter = require('./routes/driver');
 const bookingRouter = require('./routes/booking');
 const contractRouter = require('./routes/contract');
 const paymentRouter = require('./routes/payment');
+const stripePaymentRouter = require('./routes/stripePayment');
 const deliveryRouter = require('./routes/delivery');
 const returnRouter = require('./routes/return');
 const reportRouter = require('./routes/report');
@@ -78,7 +78,9 @@ app.use('/vehicles', vehicleRouter);
 app.use('/drivers', driverRouter);
 app.use('/bookings', bookingRouter);
 app.use('/contracts', contractRouter);
+app.use('/payments', stripePaymentRouter);
 app.use('/payments', paymentRouter);
+
 app.use('/deliveries', deliveryRouter);
 app.use('/returns', returnRouter);
 app.use('/reports', reportRouter);

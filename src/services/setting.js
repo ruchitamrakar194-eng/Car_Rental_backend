@@ -95,9 +95,22 @@ const getSettingWithFallback = async (key, defaultValue) => {
   }
 };
 
+const getPublicSettings = async () => {
+  const taxRate = await getSettingWithFallback('TAX_RATE', 8);
+  const deliveryFee = await getSettingWithFallback('DELIVERY_FEE', 150);
+  const platformName = await getSettingWithFallback('PLATFORM_NAME', 'AERO-DRIVE CONTROL');
+
+  return {
+    taxRate,
+    deliveryFee,
+    platformName,
+  };
+};
+
 module.exports = {
   getSettings,
   getSettingByKey,
   updateSetting,
   getSettingWithFallback,
+  getPublicSettings,
 };
