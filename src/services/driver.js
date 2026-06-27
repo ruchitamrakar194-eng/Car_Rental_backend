@@ -224,6 +224,39 @@ const addDriverDocument = async (id, docBody, currentUserId, currentUserRole) =>
   return doc;
 };
 
+const getMyDriverProfile = async (userId) => {
+  const driver = await prisma.driverProfile.findUnique({
+    where: { user_id: userId },
+    include: {
+      documents: true,
+      deliveries: {
+        orderBy: { created_at: 'desc' },
+        take: 5,
+        include: { vehicle: { select: { make: true, model: true } } },
+      },
+      returns: {
+        orderBy: { created_at: 'desc' },
+        take: 5,
+        include: { vehicle: { select: { make: true, model: true } } },
+      },
+      user: {
+        select: {
+          name: true,
+          email: true,
+          phone: true,
+          avatar_url: true,
+        },
+      },
+    },
+  });
+
+  if (!driver || driver.user?.is_deleted) {
+    throw new NotFoundError('Driver profile not found.');
+  }
+
+  return driver;
+};
+
 module.exports = {
   getDrivers,
   getDriverById,
@@ -232,4 +265,5 @@ module.exports = {
   getPerformanceMetrics,
   getDriverDocuments,
   addDriverDocument,
+  getMyDriverProfile,
 };

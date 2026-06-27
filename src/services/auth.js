@@ -212,6 +212,28 @@ const resetUserPassword = async (token, newPassword) => {
   ]);
 };
 
+const updateUserProfile = async (userId, data) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || user.is_deleted) {
+    throw new NotFoundError('User not found.');
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name: data.name !== undefined ? data.name : user.name,
+      phone: data.phone !== undefined ? data.phone : user.phone,
+      avatar_url: data.avatar_url !== undefined ? data.avatar_url : user.avatar_url,
+    },
+  });
+
+  const { password_hash, ...userResponse } = updatedUser;
+  return userResponse;
+};
+
 module.exports = {
   loginUser,
   logoutUser,
@@ -219,4 +241,5 @@ module.exports = {
   changeUserPassword,
   forgotUserPassword,
   resetUserPassword,
+  updateUserProfile,
 };

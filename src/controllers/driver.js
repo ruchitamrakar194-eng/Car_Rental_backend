@@ -65,6 +65,15 @@ const addDocument = async (req, res, next) => {
   }
 };
 
+const getMyProfile = async (req, res, next) => {
+  try {
+    const driver = await driverService.getMyDriverProfile(req.user.id);
+    return success(res, 'My Driver profile retrieved successfully.', { driver });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   list,
   getById,
@@ -73,4 +82,5 @@ module.exports = {
   getPerformance,
   getDocuments,
   addDocument,
+  getMyProfile,
 };

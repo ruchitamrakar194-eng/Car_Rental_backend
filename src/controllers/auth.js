@@ -70,6 +70,16 @@ const me = async (req, res, next) => {
   }
 };
 
+const updateMe = async (req, res, next) => {
+  try {
+    const { name, phone, avatar_url } = req.body;
+    const updatedUser = await authService.updateUserProfile(req.user.id, { name, phone, avatar_url });
+    return success(res, 'Profile updated successfully.', { user: updatedUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   logout,
@@ -78,4 +88,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   me,
+  updateMe,
 };

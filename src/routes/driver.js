@@ -11,6 +11,7 @@ router.use(authenticate);
 router.get('/', authorize('ADMIN', 'OPERATIONS_MANAGER'), driverController.list);
 
 // Resource operations endpoints (permission checks handled within the service layer)
+router.get('/profile/me', authorize('DRIVER'), driverController.getMyProfile);
 router.get('/:id', authorize('ADMIN', 'OPERATIONS_MANAGER', 'DRIVER'), driverController.getById);
 router.get('/:id/compliance', authorize('ADMIN', 'OPERATIONS_MANAGER', 'DRIVER'), driverController.getCompliance);
 router.get('/:id/performance', authorize('ADMIN', 'OPERATIONS_MANAGER', 'DRIVER'), driverController.getPerformance);
