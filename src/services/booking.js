@@ -767,6 +767,27 @@ const cancelPublicBooking = async (id) => {
   ]);
 };
 
+const checkPublicAvailability = async (vehicleId, pickupDate, returnDate) => {
+  const overlap = await checkOverlappingBookings(vehicleId, pickupDate, returnDate);
+  return { available: !overlap };
+};
+
+const getVehicleBookedDates = async (vehicleId) => {
+  const bookings = await prisma.booking.findMany({
+    where: {
+      vehicle_id: vehicleId,
+      is_deleted: false,
+      status: { notIn: ['Cancelled', 'Rejected'] },
+      return_date: { gte: new Date() }, // Only future bookings
+    },
+    select: {
+      pickup_date: true,
+      return_date: true,
+    }
+  });
+  return bookings;
+};
+
 module.exports = {
   createBooking,
   createPublicBooking,
@@ -778,4 +799,6 @@ module.exports = {
   assignDriver,
   addBookingNote,
   softDeleteBooking,
+  checkPublicAvailability,
+  getVehicleBookedDates,
 };

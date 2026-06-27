@@ -8,6 +8,8 @@ const router = express.Router();
 // Public booking creation endpoint (no auth required)
 router.post('/public-booking', bookingController.createPublicBooking);
 router.delete('/public-cancel/:id', bookingController.cancelPublicBooking);
+router.post('/public-availability', bookingController.checkPublicAvailability);
+router.get('/public-vehicle-dates/:vehicleId', bookingController.getVehicleBookedDates);
 
 router.use(authenticate);
 

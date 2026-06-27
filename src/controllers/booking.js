@@ -94,6 +94,25 @@ const cancelPublicBooking = async (req, res, next) => {
   }
 };
 
+const checkPublicAvailability = async (req, res, next) => {
+  try {
+    const { vehicleId, pickupDate, returnDate } = req.body;
+    const result = await bookingService.checkPublicAvailability(vehicleId, pickupDate, returnDate);
+    return success(res, 'Availability checked successfully.', result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getVehicleBookedDates = async (req, res, next) => {
+  try {
+    const dates = await bookingService.getVehicleBookedDates(req.params.vehicleId);
+    return success(res, 'Booked dates retrieved successfully.', dates);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   create,
   createPublicBooking,
@@ -105,4 +124,6 @@ module.exports = {
   assignDriver,
   addNote,
   remove,
+  checkPublicAvailability,
+  getVehicleBookedDates,
 };
