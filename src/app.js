@@ -17,6 +17,8 @@ const allowedOrigins = [
   'http://localhost:3001',
   'https://gofintaza-carrentals.netlify.app',
   'http://gofintaza-carrentals.netlify.app',
+  'https://novadriverrentals.netlify.app',
+  'http://novadriverrentals.netlify.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
